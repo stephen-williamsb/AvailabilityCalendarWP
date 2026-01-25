@@ -180,6 +180,7 @@ if ( ! function_exists( 'av_add_fullcalendar_init_script' ) ) {
     function initCalendar() {
       var calendar = new FullCalendar.Calendar(container, {
         initialView: 'dayGridMonth',
+        height: 'auto',
         headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
         googleCalendarApiKey: availabilityCalendarConfig.apiKey,
         events: { googleCalendarId: availabilityCalendarConfig.calendarId },
@@ -345,8 +346,10 @@ if ( ! function_exists( 'av_settings_page' ) ) {
 if ( ! function_exists( 'av_add_styles' ) ) {
     function av_add_styles() {
         $css = '
+        /* Outer container background */
         .av-availability-calendar { background: #f8f8f8; padding: 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.8); }
 
+        /* Force uniform OffWhite for the month grid (override FullCalendar striping) */
         .fc .fc-daygrid-body .fc-row,
         .fc .fc-daygrid-day,
         .fc .fc-daygrid-day-frame,
@@ -356,24 +359,50 @@ if ( ! function_exists( 'av_add_styles' ) ) {
           background-image: none !important;
         }
 
+        /* Make the day number (date) text black */
         .fc .fc-daygrid-day-number,
-        .fc .fc-daygrid-day-events {
-          background: transparent !important;
+        .fc .fc-daygrid-day-top {
+          color: #000 !important;
         }
 
-       .fc .fc-daygrid-event .fc-event-title,
+        /* Ensure any text inside day cells is black */
+        .fc .fc-daygrid-day-frame,
+        .fc .fc-daygrid-day-frame * {
+          color: #000 !important;
+        }
+
+        /* Force event title text black where visible */
+        .fc .fc-daygrid-event .fc-event-title,
         .fc .fc-event-title,
         .fc .fc-event-title-container {
           color: #000 !important;
         }
 
+        /* CLOSED background event styling (unchanged) */
         .av-bg-event { background-color: rgb(202, 202, 202) !important; opacity: 1 !important; }
 
-        .fc .fc-daygrid-day-frame { min-height: 80px; }
+        /* Prevent blocked overlays from showing in other-month padding cells */
+        .fc .fc-daygrid-day.fc-daygrid-day-other .av-bg-event,
+        .fc .fc-daygrid-day.fc-day-other .av-bg-event,
+        .fc .fc-daygrid-day-other .av-bg-event {
+          display: none !important;
+        }
+
+        
+
+        /* IMPORTANT: remove FullCalendars internal vertical scroller so no right-hand scrollbar appears */
+        .fc .fc-scroller {
+          overflow-y: visible !important;
+          max-height: none !important;
+        }
+
+        /* Also make sure the outer container doesnt show a scrollbar */
+        .av-availability-calendar { overflow: visible !important; }
         ';
         wp_add_inline_style( 'av-fullcalendar-css', $css );
     }
 }
 add_action( 'wp_enqueue_scripts', 'av_add_styles', 30 );
+
 
 /* End of plugin file - no closing PHP tag to avoid accidental whitespace output */
