@@ -178,29 +178,53 @@ if ( ! function_exists( 'av_add_fullcalendar_init_script' ) ) {
     }
 
     function initCalendar() {
-      var calendar = new FullCalendar.Calendar(container, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
-        googleCalendarApiKey: availabilityCalendarConfig.apiKey,
-        events: { googleCalendarId: availabilityCalendarConfig.calendarId },
-        eventDataTransform: buildEventDataTransform(),
-        dayMaxEventRows: 3,
-        navLinks: true,
-        selectable: false,
-        editable: false,
-        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
-      });
+  // Hardcoded cutoff date (YYYY-MM-DD). Days BEFORE this are blocked.
+  var cutoffDate = '2026-06-13';
 
-      calendar.render();
+  var calendar = new FullCalendar.Calendar(container, {
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: '' },
+    googleCalendarApiKey: availabilityCalendarConfig.apiKey,
 
-      var refreshMinutes = parseInt(availabilityCalendarConfig.refreshMinutes, 10) || 5;
-      if (refreshMinutes > 0) {
-        setInterval(function () {
-          calendar.refetchEvents();
-        }, refreshMinutes * 60 * 1000);
+    // Use eventSources (recommended) instead of events:[...]
+    eventSources: [
+      // 1) Google Calendar source
+      {
+        googleCalendarId: availabilityCalendarConfig.calendarId
+      },
+
+      // 2) Synthetic "busy" background block before cutoff
+      {
+        events: [
+          {
+            start: '1900-01-01',
+            end: cutoffDate, // end is exclusive: cutoff day itself is NOT blocked
+            allDay: true,
+            display: 'background',
+            classNames: ['av-bg-event', 'av-precutoff-busy']
+          }
+        ]
       }
-    }
+    ],
+
+    eventDataTransform: buildEventDataTransform(),
+    dayMaxEventRows: 3,
+    navLinks: true,
+    selectable: false,
+    editable: false,
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
+  });
+
+  calendar.render();
+
+  var refreshMinutes = parseInt(availabilityCalendarConfig.refreshMinutes, 10) || 5;
+  if (refreshMinutes > 0) {
+    setInterval(function () {
+      calendar.refetchEvents();
+    }, refreshMinutes * 60 * 1000);
+  }
+}
 
     initCalendar();
   });
